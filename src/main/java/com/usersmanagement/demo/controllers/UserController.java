@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -59,6 +60,25 @@ public class UserController {
 	@DeleteMapping(path="/{id}")
 	public void deleteUser(@PathVariable int id) {
 		userRepository.deleteById(id);
+	}
+	
+	@PutMapping
+	public ResponseEntity<?> updateUser(User user) {
+		List<User> getByMail = userRepository.getByMail(user.getEmail());
+		System.out.println(getByMail);
+		if (getByMail.isEmpty()) {
+			String rawPassword = user.getPassword();
+			if (!rawPassword.isEmpty()) {
+				String encriptedPass = user.encryptPassword(rawPassword);
+				user.setPassword(encriptedPass);
+			}
+			userRepository.save(user);
+			user.setPassword("***********");
+			return new ResponseEntity<>(user, HttpStatus.CREATED);
+			
+		} else {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
+		}
 	}
 
 }
